@@ -4,7 +4,7 @@ import numpy as np
 
 class SolarApplianceEnv(gym.Env):
     """
-    Custom Gym environment for managing a solar-powered home with a battery and one main appliance.
+    Custom Gymnasium environment for managing a solar-powered home with a battery and one main appliance.
     Battery is continuously used to run other essential devices (e.g., fridge, router).
     """
     def __init__(self):
@@ -22,7 +22,7 @@ class SolarApplianceEnv(gym.Env):
         # Main appliance consumption (kWh)
         self.appliance_consumption = 2.0
         
-        # Baseline household consumption (fridge, router...) (kWh/hour)
+        # Baseline household consumption (kWh/hour)
         self.baseline_consumption = 0.5
         
         # Maximum solar energy production per hour (kWh)
@@ -40,8 +40,10 @@ class SolarApplianceEnv(gym.Env):
 
         self.reset()
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
         """Resets the environment at the start of each episode."""
+        super().reset(seed=seed)  # ensures reproducible randomness
+        
         if hasattr(self, 'battery'):
             # Adjust battery based on previous net import/export if you want persistence
             net_energy = self.total_energy_imported - self.total_energy_exported
@@ -54,7 +56,7 @@ class SolarApplianceEnv(gym.Env):
         self.total_energy_imported = 0.0
         self.total_energy_exported = 0.0
         
-        return self._get_obs()
+        return self._get_obs(), {}
 
     def _get_obs(self):
         """Returns the current observation of the environment."""
@@ -88,14 +90,15 @@ class SolarApplianceEnv(gym.Env):
                 reward -= 20  # Penalty if not enough energy
         
         self.hour += 1
-        done = self.hour >= self.hours_per_day
+        terminated = self.hour >= self.hours_per_day
+        truncated = False  # You can add time-limit logic if needed
 
         # blackout penalty
         if self.battery == 0:
             reward -= 100  # High cost for running out of energy
 
         # Penalty if the agent didn't run the appliance by end of day
-        if done and self.appliance_done == 0:
+        if terminated and self.appliance_done == 0:
             reward -= 10
 
-        return self._get_obs(), reward, done, info
+        return self._get_obs(), reward, terminated, truncated, info
