@@ -1,56 +1,46 @@
-import numpy as np
-import pandas as pd
-from stable_baselines3 import PPO
-from envs.solar_appliance_env import SolarApplianceEnv  # Your custom environment
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-np.set_printoptions(threshold=np.inf)
+from envs.solar_appliance_env import SolarApplianceEnv
 
-def trace_model_behavior(model_path="ppo_solar_agent.zip", episode=1, save_csv=True):
+OBS_NAMES = [
+    "Hour of Day",
+    "Battery Charge",
+    "Solar Output",
+    "Appliance Running",
+    "Month",
+    "Intraday Forecast",
+    "Day-Ahead Forecast",
+    "Weekly Forecast"
+]
+
+def format_obs(obs):
+    return ", ".join(f"{name}: {val:.2f}" for name, val in zip(OBS_NAMES, obs))
+
+def run_and_log(steps=24):
     env = SolarApplianceEnv()
-    model = PPO.load(model_path)
+    obs, _ = env.reset()
+    print("🔄 Initial Observation:")
+    print("   " + format_obs(obs))
 
-    obs, info = env.reset()
-    done = False
+    for step in range(steps):
+        action = env.action_space.sample()
+        obs, reward, terminated, truncated, info = env.step(action)
+        done = terminated or truncated
 
-    logs = {
-        "Step": [],
-        "Hour": [],
-        "Battery": [],
-        "SolarOutput": [],
-        "Action": [],
-        "Reward": [],
-        "ApplianceDone": []
-    }
+        print(f"\n⏱️ Step {step + 1}")
+        print(f"   🚀 Action Taken: {action}")
+        print(f"   👀 Observation: {format_obs(obs)}")
+        print(f"   💰 Reward: {reward:.2f}")
+        if info:
+            print(f"   ℹ️ Info: {info}")
 
-    step_count = 0
-    total_reward = 0
+        if done:
+            print("\n✅ Episode finished early")
+            break
 
-    while not done:
-        action, _ = model.predict(obs)
-        obs, reward, done, truncated, info = env.step(action)
-
-        hour, battery, solar_output, appliance_done = obs
-
-        logs["Step"].append(step_count)
-        logs["Hour"].append(hour)
-        logs["Battery"].append(battery)
-        logs["SolarOutput"].append(solar_output)
-        logs["Action"].append(action)
-        logs["Reward"].append(reward)
-        logs["ApplianceDone"].append(appliance_done)
-
-        total_reward += reward
-        step_count += 1
-
-    df = pd.DataFrame(logs)
-    print(f"Total reward for episode {episode}: {total_reward}")
-    print(df.head(168))  # print first 30 steps
-
-    if save_csv:
-        df.to_csv("model_behavior_trace.csv", index=False)
-        print("Trace saved to model_behavior_trace.csv")
-
-    return df
+    env.close()
 
 if __name__ == "__main__":
-    trace_df = trace_model_behavior()
+    run_and_log()

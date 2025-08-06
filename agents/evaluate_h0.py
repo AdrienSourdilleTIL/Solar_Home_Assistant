@@ -11,7 +11,7 @@ def evaluate_heuristic_agent(episodes=100):
         episode_reward = 0
 
         while not done:
-            action = 1  # always run appliance
+            action = 0  # always run appliance
             obs, reward, done, truncated, info = env.step(action)
             episode_reward += reward
 

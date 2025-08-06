@@ -25,15 +25,6 @@ def evaluate_model(model_path="ppo_solar_agent.zip", episodes=100):
     avg_reward = np.mean(rewards)
     print(f"\nAverage Reward over {episodes} episodes: {avg_reward}")
 
-    # Plot rewards
-    plt.figure()
-    plt.plot(range(1, episodes+1), rewards, marker='o')
-    plt.axhline(avg_reward, color='red', linestyle='--', label=f'Average = {avg_reward:.2f}')
-    plt.xlabel('Episode')
-    plt.ylabel('Total Reward')
-    plt.title('Model Evaluation')
-    plt.legend()
-    plt.show()
 
 if __name__ == "__main__":
     evaluate_model()
