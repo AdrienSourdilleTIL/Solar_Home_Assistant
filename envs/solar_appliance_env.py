@@ -194,7 +194,10 @@ class SolarApplianceEnv(gym.Env):
         terminated = self.current_step >= self.max_steps
         truncated = False
 
+        if self.battery < 2:
+            reward -= 5  # small penalty to discourage low battery usage
+
         if self.battery == 0:
-            reward -= 100  # Blackout penalty
+            reward -= 50  # Blackout penalty
 
         return self._get_obs(), reward, terminated, truncated, info

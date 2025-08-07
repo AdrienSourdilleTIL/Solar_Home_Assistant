@@ -18,7 +18,7 @@ def main():
     )
 
     # 4. Train agent
-    model.learn(total_timesteps=100_000)
+    model.learn(total_timesteps=1_680_000)
 
     # 5. Save model
     model.save("ppo_solar_agent")
